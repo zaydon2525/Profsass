@@ -1,0 +1,83 @@
+
+## 🔐 Authentification Privée avec Supabase
+1. Configuration de Supabase pour :
+   - Désactiver les inscriptions publiques
+   - Activer l'authentification email/password
+   - Configurer les politiques de sécurité
+
+2. Système de rôles avec 4 niveaux :
+   - Admin (création initiale avec admin@ecole.com / admin23)
+   - Professeur (créé par l'admin)
+   - Élève (créé par les professeurs)
+   - Parent (optionnel, à implémenter si besoin)
+
+3. Workflow de création des comptes :
+   - Premier admin crée les professeurs
+   - Les professeurs créent leurs élèves
+   - Chaque utilisateur peut modifier son mot de passe après premier login
+
+## 📚 Fonctionnalités Principales
+
+### 1. Gestion des Utilisateurs
+- Tableau de bord admin pour :
+  - Créer/supprimer des professeurs
+  - Voir la liste des utilisateurs actifs
+- Professeurs peuvent :
+  - Créer/supprimer des élèves
+  - Voir leurs élèves attribués
+
+### 2. Gestion des Groupes et Matières
+- Création/suppression de groupes
+- Attribution de matières aux groupes
+- Liste des élèves par groupe
+
+### 3. Système de Supports de Cours
+- Téléversement de fichiers (PDF, images, vidéos)
+- Organisation par groupe/matière
+- Accès selon les rôles
+- Système de commentaires (modéré)
+
+### 4. Système de Notes et Progrès
+- Saisie des notes par matière
+- Visualisation des progrès avec graphiques
+- Objectifs personnalisables
+- Export en PDF/CSV
+
+### 5. Tableau de Bord Personnalisé
+- Vue différente selon le rôle
+- Accès aux fonctionnalités autorisées
+- Notifications importantes
+
+## 🎨 Design et UX
+- Utilisation de Tailwind CSS pour un design professionnel
+- Interface responsive (mobile/tablette/ordinateur)
+- Mode sombre activable
+- Feedback visuel pour toutes les actions
+
+## 🗂️ Base de Données Supabase
+Crée le schéma de base de données avec :
+- Tables pour les utilisateurs, groupes, notes, supports, etc.
+- Relations entre les tables
+- Sécurité basée sur les rôles (RLS)
+- Stockage pour les fichiers
+
+## 🚀 Fonctionnalités Supplémentaires
+- Notifications Toast pour les actions
+- Journal d'activité
+- Gestion des erreurs globale
+- Documentation technique intégrée
+
+## 📦 Livrables attendus
+1. Code source complet organisé
+2. Configuration Supabase prête à l'emploi
+3. Instructions d'installation détaillées
+4. Données d'exemple pour tester toutes les fonctionnalités
+
+Génère TOUS les fichiers nécessaires pour une application fonctionnelle, avec :
+- La configuration initiale de Supabase
+- Les composants React avec TypeScript
+- Les services pour interagir avec Supabase
+- Un système de gestion des rôles complet
+- Des données d'exemple pour tester
+
+Conserve toutes les fonctionnalités pédagogiques demandées précédemment et assure une expérience utilisateur optimale pour chaque type d'utilisateur.
