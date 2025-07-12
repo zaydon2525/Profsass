@@ -12,6 +12,8 @@ import Users from "@/pages/Users";
 import Groups from "@/pages/Groups";
 import Materials from "@/pages/Materials";
 import Grades from "@/pages/Grades";
+import Schedule from "@/pages/Schedule";
+import Messages from "@/pages/Messages";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -46,6 +48,16 @@ function Router() {
       <Route path="/grades" component={() => (
         <ProtectedRoute>
           <Grades />
+        </ProtectedRoute>
+      )} />
+      <Route path="/schedule" component={() => (
+        <ProtectedRoute>
+          <Schedule />
+        </ProtectedRoute>
+      )} />
+      <Route path="/messages" component={() => (
+        <ProtectedRoute>
+          <Messages />
         </ProtectedRoute>
       )} />
       <Route component={NotFound} />

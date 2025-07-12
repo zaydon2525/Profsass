@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUsers } from '@/hooks/useUsers';
+import { useGroups } from '@/hooks/useGroups';
 import { createUserSchema, type CreateUserData } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,13 +16,16 @@ import { useAuth } from '@/contexts/AuthContext';
 interface CreateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultRole?: 'professor' | 'student' | 'parent';
 }
 
-export function CreateUserModal({ isOpen, onClose }: CreateUserModalProps) {
+export function CreateUserModal({ isOpen, onClose, defaultRole = 'student' }: CreateUserModalProps) {
   const { user: currentUser } = useAuth();
   const { createUser } = useUsers();
+  const { data: groups = [] } = useGroups();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
 
   const form = useForm<CreateUserData>({
     resolver: zodResolver(createUserSchema),
@@ -29,13 +33,30 @@ export function CreateUserModal({ isOpen, onClose }: CreateUserModalProps) {
       firstName: '',
       lastName: '',
       email: '',
-      role: 'student',
+      role: defaultRole,
       password: '',
       confirmPassword: '',
       isActive: true,
       mustChangePassword: true,
     },
   });
+
+  // Reset form when modal opens or defaultRole changes
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: defaultRole,
+        password: '',
+        confirmPassword: '',
+        isActive: true,
+        mustChangePassword: true,
+      });
+      setSelectedGroup('');
+    }
+  }, [isOpen, defaultRole, form]);
 
   const onSubmit = async (data: CreateUserData) => {
     try {
@@ -150,6 +171,27 @@ export function CreateUserModal({ isOpen, onClose }: CreateUserModalProps) {
                 </FormItem>
               )}
             />
+            
+            {/* Group selection for students */}
+            {form.watch('role') === 'student' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Groupe (optionnel)
+                </label>
+                <Select onValueChange={setSelectedGroup} value={selectedGroup}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un groupe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name} ({group.academicYear})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <FormField
               control={form.control}

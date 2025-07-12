@@ -1,9 +1,11 @@
 import { 
-  users, groups, subjects, materials, grades, activityLogs, notifications,
+  users, groups, subjects, materials, grades, activityLogs, notifications, schedules, groupMessages, messageComments, messageLikes,
   type User, type InsertUser, type Group, type InsertGroup, 
   type Subject, type InsertSubject, type Material, type InsertMaterial,
   type Grade, type InsertGrade, type ActivityLog, type InsertActivityLog,
-  type Notification, type InsertNotification
+  type Notification, type InsertNotification, type Schedule, type InsertSchedule,
+  type GroupMessage, type InsertGroupMessage, type MessageComment, type InsertMessageComment,
+  type MessageLike, type InsertMessageLike
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -53,6 +55,32 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   getUserNotifications(userId: string): Promise<Notification[]>;
   markNotificationAsRead(id: string): Promise<boolean>;
+
+  // Schedule operations
+  getSchedules(): Promise<Schedule[]>;
+  getSchedule(id: string): Promise<Schedule | undefined>;
+  getSchedulesByGroup(groupId: string): Promise<Schedule[]>;
+  getSchedulesByProfessor(professorId: string): Promise<Schedule[]>;
+  createSchedule(schedule: InsertSchedule): Promise<Schedule>;
+  updateSchedule(id: string, updates: Partial<Schedule>): Promise<Schedule | undefined>;
+  deleteSchedule(id: string): Promise<boolean>;
+
+  // Group message operations
+  getGroupMessages(groupId: string): Promise<GroupMessage[]>;
+  getGroupMessage(id: string): Promise<GroupMessage | undefined>;
+  createGroupMessage(message: InsertGroupMessage): Promise<GroupMessage>;
+  updateGroupMessage(id: string, updates: Partial<GroupMessage>): Promise<GroupMessage | undefined>;
+  deleteGroupMessage(id: string): Promise<boolean>;
+
+  // Message comment operations
+  getMessageComments(messageId: string): Promise<MessageComment[]>;
+  createMessageComment(comment: InsertMessageComment): Promise<MessageComment>;
+  deleteMessageComment(id: string): Promise<boolean>;
+
+  // Message like operations
+  getMessageLikes(messageId: string): Promise<MessageLike[]>;
+  createMessageLike(like: InsertMessageLike): Promise<MessageLike>;
+  deleteMessageLike(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -473,6 +501,122 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Schedule operations
+  async getSchedules(): Promise<Schedule[]> {
+    return await db.select().from(schedules).orderBy(schedules.dayOfWeek, schedules.startTime);
+  }
+
+  async getSchedule(id: string): Promise<Schedule | undefined> {
+    const [schedule] = await db.select().from(schedules).where(eq(schedules.id, id));
+    return schedule || undefined;
+  }
+
+  async getSchedulesByGroup(groupId: string): Promise<Schedule[]> {
+    return await db
+      .select()
+      .from(schedules)
+      .where(eq(schedules.groupId, groupId))
+      .orderBy(schedules.dayOfWeek, schedules.startTime);
+  }
+
+  async getSchedulesByProfessor(professorId: string): Promise<Schedule[]> {
+    return await db
+      .select()
+      .from(schedules)
+      .where(eq(schedules.professorId, professorId))
+      .orderBy(schedules.dayOfWeek, schedules.startTime);
+  }
+
+  async createSchedule(insertSchedule: InsertSchedule): Promise<Schedule> {
+    const [schedule] = await db.insert(schedules).values(insertSchedule).returning();
+    return schedule;
+  }
+
+  async updateSchedule(id: string, updates: Partial<Schedule>): Promise<Schedule | undefined> {
+    const [schedule] = await db
+      .update(schedules)
+      .set(updates)
+      .where(eq(schedules.id, id))
+      .returning();
+    return schedule || undefined;
+  }
+
+  async deleteSchedule(id: string): Promise<boolean> {
+    const result = await db.delete(schedules).where(eq(schedules.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Group message operations
+  async getGroupMessages(groupId: string): Promise<GroupMessage[]> {
+    return await db
+      .select()
+      .from(groupMessages)
+      .where(eq(groupMessages.groupId, groupId))
+      .orderBy(desc(groupMessages.createdAt));
+  }
+
+  async getGroupMessage(id: string): Promise<GroupMessage | undefined> {
+    const [message] = await db.select().from(groupMessages).where(eq(groupMessages.id, id));
+    return message || undefined;
+  }
+
+  async createGroupMessage(insertMessage: InsertGroupMessage): Promise<GroupMessage> {
+    const [message] = await db.insert(groupMessages).values(insertMessage).returning();
+    return message;
+  }
+
+  async updateGroupMessage(id: string, updates: Partial<GroupMessage>): Promise<GroupMessage | undefined> {
+    const [message] = await db
+      .update(groupMessages)
+      .set(updates)
+      .where(eq(groupMessages.id, id))
+      .returning();
+    return message || undefined;
+  }
+
+  async deleteGroupMessage(id: string): Promise<boolean> {
+    const result = await db.delete(groupMessages).where(eq(groupMessages.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Message comment operations
+  async getMessageComments(messageId: string): Promise<MessageComment[]> {
+    return await db
+      .select()
+      .from(messageComments)
+      .where(eq(messageComments.messageId, messageId))
+      .orderBy(desc(messageComments.createdAt));
+  }
+
+  async createMessageComment(insertComment: InsertMessageComment): Promise<MessageComment> {
+    const [comment] = await db.insert(messageComments).values(insertComment).returning();
+    return comment;
+  }
+
+  async deleteMessageComment(id: string): Promise<boolean> {
+    const result = await db.delete(messageComments).where(eq(messageComments.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Message like operations
+  async getMessageLikes(messageId: string): Promise<MessageLike[]> {
+    return await db
+      .select()
+      .from(messageLikes)
+      .where(eq(messageLikes.messageId, messageId))
+      .orderBy(desc(messageLikes.createdAt));
+  }
+
+  async createMessageLike(insertLike: InsertMessageLike): Promise<MessageLike> {
+    const [like] = await db.insert(messageLikes).values(insertLike).returning();
+    return like;
+  }
+
+  async deleteMessageLike(id: string): Promise<boolean> {
+    const result = await db.delete(messageLikes).where(eq(messageLikes.id, id));
     return result.rowCount > 0;
   }
 }

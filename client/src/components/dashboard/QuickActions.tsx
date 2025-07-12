@@ -1,69 +1,98 @@
 import { useState } from 'react';
-import { UserPlus, BookOpen, BarChart3, Upload, Users, FileText } from 'lucide-react';
+import { UserPlus, BookOpen, BarChart3, Upload, Users, FileText, GraduationCap, UserCheck, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateUserModal } from '@/components/modals/CreateUserModal';
 import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 import { UploadModal } from '@/components/modals/UploadModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'wouter';
 
 export function QuickActions() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedUserType, setSelectedUserType] = useState<'professor' | 'student' | 'parent'>('professor');
+
+  const handleCreateUser = (userType: 'professor' | 'student' | 'parent') => {
+    setSelectedUserType(userType);
+    setShowCreateUserModal(true);
+  };
 
   const getQuickActions = () => {
     if (user?.role === 'admin') {
       return [
         {
-          title: 'Créer un Professeur',
-          description: 'Ajouter un nouveau professeur au système',
-          icon: UserPlus,
-          color: 'bg-primary hover:bg-primary/90',
-          action: () => setShowCreateUserModal(true),
+          title: 'Ajouter un Professeur',
+          description: 'Créer un nouveau professeur',
+          icon: GraduationCap,
+          color: 'bg-blue-500 hover:bg-blue-600',
+          action: () => handleCreateUser('professor'),
         },
         {
-          title: 'Nouveau Groupe',
-          description: 'Créer un nouveau groupe de classe',
+          title: 'Ajouter un Élève',
+          description: 'Créer un nouvel élève',
+          icon: UserPlus,
+          color: 'bg-green-500 hover:bg-green-600',
+          action: () => handleCreateUser('student'),
+        },
+        {
+          title: 'Ajouter un Parent',
+          description: 'Créer un nouveau parent',
+          icon: Heart,
+          color: 'bg-pink-500 hover:bg-pink-600',
+          action: () => handleCreateUser('parent'),
+        },
+        {
+          title: 'Créer un Groupe',
+          description: 'Nouveau groupe de classe',
           icon: BookOpen,
-          color: 'bg-accent hover:bg-accent/90',
+          color: 'bg-purple-500 hover:bg-purple-600',
           action: () => setShowCreateGroupModal(true),
         },
         {
+          title: 'Ajouter un Cours',
+          description: 'Uploader des supports',
+          icon: Upload,
+          color: 'bg-orange-500 hover:bg-orange-600',
+          action: () => setShowUploadModal(true),
+        },
+        {
           title: 'Voir Rapports',
-          description: 'Consulter les statistiques détaillées',
+          description: 'Consulter les statistiques',
           icon: BarChart3,
-          color: 'bg-warning hover:bg-warning/90',
-          action: () => console.log('Navigate to reports'),
+          color: 'bg-red-500 hover:bg-red-600',
+          action: () => setLocation('/grades'),
         },
         {
           title: 'Gérer Utilisateurs',
           description: 'Administrer tous les utilisateurs',
           icon: Users,
-          color: 'bg-purple-500 hover:bg-purple-600',
-          action: () => console.log('Navigate to users'),
+          color: 'bg-slate-500 hover:bg-slate-600',
+          action: () => setLocation('/users'),
         },
       ];
     } else if (user?.role === 'professor') {
       return [
         {
           title: 'Créer un Élève',
-          description: 'Ajouter un nouvel élève à vos classes',
+          description: 'Ajouter un nouvel élève',
           icon: UserPlus,
-          color: 'bg-primary hover:bg-primary/90',
-          action: () => setShowCreateUserModal(true),
+          color: 'bg-green-500 hover:bg-green-600',
+          action: () => handleCreateUser('student'),
         },
         {
           title: 'Nouveau Groupe',
-          description: 'Créer un nouveau groupe de classe',
+          description: 'Créer un groupe de classe',
           icon: BookOpen,
-          color: 'bg-accent hover:bg-accent/90',
+          color: 'bg-purple-500 hover:bg-purple-600',
           action: () => setShowCreateGroupModal(true),
         },
         {
           title: 'Uploader Fichier',
-          description: 'Ajouter des supports de cours',
+          description: 'Ajouter des supports',
           icon: Upload,
           color: 'bg-blue-500 hover:bg-blue-600',
           action: () => setShowUploadModal(true),
@@ -73,27 +102,59 @@ export function QuickActions() {
           description: 'Saisir et modifier les notes',
           icon: BarChart3,
           color: 'bg-orange-500 hover:bg-orange-600',
-          action: () => console.log('Navigate to grades'),
+          action: () => setLocation('/grades'),
+        },
+        {
+          title: 'Mes Groupes',
+          description: 'Voir mes groupes',
+          icon: Users,
+          color: 'bg-slate-500 hover:bg-slate-600',
+          action: () => setLocation('/groups'),
         },
       ];
-    } else {
+    } else if (user?.role === 'student') {
       return [
         {
           title: 'Mes Notes',
           description: 'Consulter mes résultats',
           icon: BarChart3,
-          color: 'bg-primary hover:bg-primary/90',
-          action: () => console.log('Navigate to my grades'),
+          color: 'bg-blue-500 hover:bg-blue-600',
+          action: () => setLocation('/grades'),
+        },
+        {
+          title: 'Mes Groupes',
+          description: 'Voir mes groupes',
+          icon: Users,
+          color: 'bg-green-500 hover:bg-green-600',
+          action: () => setLocation('/groups'),
         },
         {
           title: 'Supports de Cours',
-          description: 'Accéder aux ressources pédagogiques',
+          description: 'Accéder aux ressources',
           icon: FileText,
-          color: 'bg-accent hover:bg-accent/90',
-          action: () => console.log('Navigate to materials'),
+          color: 'bg-purple-500 hover:bg-purple-600',
+          action: () => setLocation('/materials'),
+        },
+      ];
+    } else if (user?.role === 'parent') {
+      return [
+        {
+          title: 'Notes de mon Enfant',
+          description: 'Consulter les résultats',
+          icon: BarChart3,
+          color: 'bg-blue-500 hover:bg-blue-600',
+          action: () => setLocation('/grades'),
+        },
+        {
+          title: 'Planning Hebdomadaire',
+          description: 'Voir le planning',
+          icon: FileText,
+          color: 'bg-green-500 hover:bg-green-600',
+          action: () => setLocation('/materials'),
         },
       ];
     }
+    return [];
   };
 
   const quickActions = getQuickActions();
@@ -107,7 +168,11 @@ export function QuickActions() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${
+            user?.role === 'admin' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          }`}>
             {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
@@ -131,7 +196,8 @@ export function QuickActions() {
       {/* Modals */}
       <CreateUserModal 
         isOpen={showCreateUserModal} 
-        onClose={() => setShowCreateUserModal(false)} 
+        onClose={() => setShowCreateUserModal(false)}
+        defaultRole={selectedUserType}
       />
       <CreateGroupModal 
         isOpen={showCreateGroupModal} 

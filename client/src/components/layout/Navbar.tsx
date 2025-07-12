@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Bell, ChevronDown, Users, BookOpen, FileText, BarChart3, Home } from 'lucide-react';
+import { Bell, ChevronDown, Users, BookOpen, FileText, BarChart3, Home, Calendar, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -20,13 +20,21 @@ export function Navbar() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const navigation = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: Home },
-    { name: 'Utilisateurs', href: '/users', icon: Users },
-    { name: 'Groupes', href: '/groups', icon: BookOpen },
-    { name: 'Supports', href: '/materials', icon: FileText },
-    { name: 'Notes', href: '/grades', icon: BarChart3 },
-  ];
+  const getNavigation = () => {
+    const baseNavigation = [
+      { name: 'Tableau de bord', href: '/dashboard', icon: Home, roles: ['admin', 'professor', 'student', 'parent'] },
+      { name: 'Emploi du temps', href: '/schedule', icon: Calendar, roles: ['admin', 'professor', 'student', 'parent'] },
+      { name: 'Messages', href: '/messages', icon: MessageSquare, roles: ['admin', 'professor', 'student', 'parent'] },
+      { name: 'Supports', href: '/materials', icon: FileText, roles: ['admin', 'professor', 'student', 'parent'] },
+      { name: 'Notes', href: '/grades', icon: BarChart3, roles: ['admin', 'professor', 'student', 'parent'] },
+      { name: 'Utilisateurs', href: '/users', icon: Users, roles: ['admin', 'professor'] },
+      { name: 'Groupes', href: '/groups', icon: BookOpen, roles: ['admin', 'professor'] },
+    ];
+    
+    return baseNavigation.filter(item => 
+      user?.role && item.roles.includes(user.role)
+    );
+  };
 
   return (
     <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
@@ -37,7 +45,7 @@ export function Navbar() {
               <h1 className="text-xl font-bold text-primary">École Connect</h1>
             </div>
             <nav className="hidden md:ml-10 md:flex md:space-x-8">
-              {navigation.map((item) => {
+              {getNavigation().map((item) => {
                 const Icon = item.icon;
                 const isActive = location === item.href;
                 return (

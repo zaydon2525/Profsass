@@ -122,6 +122,49 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Weekly schedule/timetable
+export const schedules = pgTable("schedules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  groupId: uuid("group_id").references(() => groups.id).notNull(),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
+  professorId: uuid("professor_id").references(() => users.id).notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6 (Sunday-Saturday)
+  startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
+  endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
+  room: varchar("room", { length: 50 }),
+  notes: text("notes"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Messages/Posts for groups
+export const groupMessages = pgTable("group_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  groupId: uuid("group_id").references(() => groups.id).notNull(),
+  authorId: uuid("author_id").references(() => users.id).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  isImportant: boolean("is_important").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Comments on group messages
+export const messageComments = pgTable("message_comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  messageId: uuid("message_id").references(() => groupMessages.id).notNull(),
+  authorId: uuid("author_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Message likes
+export const messageLikes = pgTable("message_likes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  messageId: uuid("message_id").references(() => groupMessages.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdGroups: many(groups),
@@ -187,6 +230,29 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));
 
+export const schedulesRelations = relations(schedules, ({ one }) => ({
+  group: one(groups, { fields: [schedules.groupId], references: [groups.id] }),
+  subject: one(subjects, { fields: [schedules.subjectId], references: [subjects.id] }),
+  professor: one(users, { fields: [schedules.professorId], references: [users.id] }),
+}));
+
+export const groupMessagesRelations = relations(groupMessages, ({ one, many }) => ({
+  group: one(groups, { fields: [groupMessages.groupId], references: [groups.id] }),
+  author: one(users, { fields: [groupMessages.authorId], references: [users.id] }),
+  comments: many(messageComments),
+  likes: many(messageLikes),
+}));
+
+export const messageCommentsRelations = relations(messageComments, ({ one }) => ({
+  message: one(groupMessages, { fields: [messageComments.messageId], references: [groupMessages.id] }),
+  author: one(users, { fields: [messageComments.authorId], references: [users.id] }),
+}));
+
+export const messageLikesRelations = relations(messageLikes, ({ one }) => ({
+  message: one(groupMessages, { fields: [messageLikes.messageId], references: [groupMessages.id] }),
+  user: one(users, { fields: [messageLikes.userId], references: [users.id] }),
+}));
+
 // Schema definitions
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -225,6 +291,26 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertScheduleSchema = createInsertSchema(schedules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGroupMessageSchema = createInsertSchema(groupMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMessageCommentSchema = createInsertSchema(messageComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMessageLikeSchema = createInsertSchema(messageLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -240,6 +326,14 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Schedule = typeof schedules.$inferSelect;
+export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
+export type GroupMessage = typeof groupMessages.$inferSelect;
+export type InsertGroupMessage = z.infer<typeof insertGroupMessageSchema>;
+export type MessageComment = typeof messageComments.$inferSelect;
+export type InsertMessageComment = z.infer<typeof insertMessageCommentSchema>;
+export type MessageLike = typeof messageLikes.$inferSelect;
+export type InsertMessageLike = z.infer<typeof insertMessageLikeSchema>;
 
 // Additional schemas for specific operations
 export const loginSchema = z.object({
