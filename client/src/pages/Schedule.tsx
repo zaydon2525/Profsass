@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, MapPin, BookOpen, Users, Plus } from 'lucide-react';
+import { useSchedules } from '@/hooks/useSchedules';
+import { CreateCourseModal } from '@/components/modals/CreateCourseModal';
 
 const DAYS_OF_WEEK = [
   { value: 1, label: 'Lundi', short: 'Lun' },
@@ -23,6 +25,12 @@ export default function Schedule() {
   const { user } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // Fetch schedules based on user role
+  const schedulesQuery = useSchedules(
+    user?.role === 'professor' ? undefined : undefined,
+    user?.role === 'professor' ? user.id : undefined
+  );
 
   const canCreateSchedule = user?.role === 'admin' || user?.role === 'professor';
 
@@ -57,41 +65,10 @@ export default function Schedule() {
     return `${startStr} - ${endStr}`;
   };
 
-  const mockScheduleData = [
-    {
-      id: '1',
-      dayOfWeek: 1,
-      startTime: '09:00',
-      endTime: '10:30',
-      subject: 'Mathématiques',
-      professor: 'M. Dupont',
-      room: 'Salle 101',
-      group: 'Terminale S1'
-    },
-    {
-      id: '2',
-      dayOfWeek: 1,
-      startTime: '10:45',
-      endTime: '12:15',
-      subject: 'Physique',
-      professor: 'Mme Martin',
-      room: 'Labo 1',
-      group: 'Terminale S1'
-    },
-    {
-      id: '3',
-      dayOfWeek: 2,
-      startTime: '08:00',
-      endTime: '09:30',
-      subject: 'Français',
-      professor: 'M. Bernard',
-      room: 'Salle 203',
-      group: 'Terminale S1'
-    }
-  ];
+  const scheduleData = schedulesQuery.data || [];
 
   const getScheduleForDay = (dayOfWeek: number) => {
-    return mockScheduleData.filter(item => item.dayOfWeek === dayOfWeek);
+    return scheduleData.filter(item => item.dayOfWeek === dayOfWeek);
   };
 
   return (
@@ -178,21 +155,22 @@ export default function Schedule() {
                       {slotSchedule && (
                         <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-md text-xs h-full">
                           <div className="font-medium text-blue-800 dark:text-blue-200 truncate">
-                            {slotSchedule.subject}
+                            Cours
                           </div>
                           <div className="text-blue-600 dark:text-blue-300 mt-1">
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {slotSchedule.startTime} - {slotSchedule.endTime}
                             </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <MapPin className="h-3 w-3" />
-                              {slotSchedule.room}
-                            </div>
-                            {user?.role !== 'student' && (
+                            {slotSchedule.room && (
                               <div className="flex items-center gap-1 mt-1">
-                                <Users className="h-3 w-3" />
-                                {slotSchedule.group}
+                                <MapPin className="h-3 w-3" />
+                                {slotSchedule.room}
+                              </div>
+                            )}
+                            {slotSchedule.notes && (
+                              <div className="text-xs mt-1 truncate">
+                                {slotSchedule.notes}
                               </div>
                             )}
                           </div>
@@ -234,18 +212,17 @@ export default function Schedule() {
                             </span>
                           </div>
                           <div className="font-medium text-slate-900 dark:text-slate-100 mt-1">
-                            {schedule.subject}
+                            Cours
                           </div>
                           <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {schedule.room}
-                            </div>
-                            {user?.role !== 'student' && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Users className="h-3 w-3" />
-                                {schedule.group}
+                            {schedule.room && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {schedule.room}
                               </div>
+                            )}
+                            {schedule.notes && (
+                              <div className="mt-1">{schedule.notes}</div>
                             )}
                           </div>
                         </div>
@@ -286,6 +263,12 @@ export default function Schedule() {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Course Modal */}
+      <CreateCourseModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

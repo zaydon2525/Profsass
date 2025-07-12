@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateUserModal } from '@/components/modals/CreateUserModal';
 import { CreateGroupModal } from '@/components/modals/CreateGroupModal';
 import { UploadModal } from '@/components/modals/UploadModal';
+import { CreateCourseModal } from '@/components/modals/CreateCourseModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 
@@ -14,6 +15,7 @@ export function QuickActions() {
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCreateCourseModal, setShowCreateCourseModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<'professor' | 'student' | 'parent'>('professor');
 
   const handleCreateUser = (userType: 'professor' | 'student' | 'parent') => {
@@ -54,10 +56,10 @@ export function QuickActions() {
         },
         {
           title: 'Ajouter un Cours',
-          description: 'Uploader des supports',
-          icon: Upload,
+          description: 'Créer un nouveau cours',
+          icon: BookOpen,
           color: 'bg-orange-500 hover:bg-orange-600',
-          action: () => setShowUploadModal(true),
+          action: () => setShowCreateCourseModal(true),
         },
         {
           title: 'Voir Rapports',
@@ -91,10 +93,17 @@ export function QuickActions() {
           action: () => setShowCreateGroupModal(true),
         },
         {
+          title: 'Nouveau Cours',
+          description: 'Créer un cours au planning',
+          icon: BookOpen,
+          color: 'bg-blue-500 hover:bg-blue-600',
+          action: () => setShowCreateCourseModal(true),
+        },
+        {
           title: 'Uploader Fichier',
           description: 'Ajouter des supports',
           icon: Upload,
-          color: 'bg-blue-500 hover:bg-blue-600',
+          color: 'bg-teal-500 hover:bg-teal-600',
           action: () => setShowUploadModal(true),
         },
         {
@@ -206,6 +215,10 @@ export function QuickActions() {
       <UploadModal 
         isOpen={showUploadModal} 
         onClose={() => setShowUploadModal(false)} 
+      />
+      <CreateCourseModal 
+        isOpen={showCreateCourseModal} 
+        onClose={() => setShowCreateCourseModal(false)}
       />
     </>
   );

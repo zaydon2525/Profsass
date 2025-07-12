@@ -9,7 +9,9 @@ import {
   insertGroupSchema, 
   insertMaterialSchema, 
   insertGradeSchema,
-  changePasswordSchema
+  changePasswordSchema,
+  insertScheduleSchema,
+  insertSubjectSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -495,6 +497,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(notifications);
     } catch (error) {
       console.error('Get notifications error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Schedule routes
+  app.get('/api/schedules', requireAuth, async (req, res) => {
+    try {
+      const { groupId, professorId } = req.query;
+      let schedules;
+      
+      if (groupId) {
+        schedules = await storage.getSchedulesByGroup(groupId as string);
+      } else if (professorId) {
+        schedules = await storage.getSchedulesByProfessor(professorId as string);
+      } else {
+        schedules = await storage.getSchedules();
+      }
+      
+      res.json(schedules);
+    } catch (error) {
+      console.error('Get schedules error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.post('/api/schedules', requireAuth, requireRole(['admin', 'professor']), async (req, res) => {
+    try {
+      const scheduleData = insertScheduleSchema.parse(req.body);
+      const schedule = await storage.createSchedule(scheduleData);
+
+      // Log activity
+      await storage.logActivity({
+        userId: req.session.userId,
+        action: 'create_schedule',
+        entityType: 'schedule',
+        entityId: schedule.id,
+        details: { 
+          dayOfWeek: scheduleData.dayOfWeek,
+          startTime: scheduleData.startTime,
+          endTime: scheduleData.endTime,
+          groupId: scheduleData.groupId,
+          subjectId: scheduleData.subjectId
+        },
+      });
+
+      res.status(201).json(schedule);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid schedule data', errors: error.errors });
+      }
+      console.error('Create schedule error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.put('/api/schedules/:id', requireAuth, requireRole(['admin', 'professor']), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const schedule = await storage.updateSchedule(id, updates);
+      if (!schedule) {
+        return res.status(404).json({ message: 'Schedule not found' });
+      }
+
+      // Log activity
+      await storage.logActivity({
+        userId: req.session.userId,
+        action: 'update_schedule',
+        entityType: 'schedule',
+        entityId: id,
+        details: { updates },
+      });
+
+      res.json(schedule);
+    } catch (error) {
+      console.error('Update schedule error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.delete('/api/schedules/:id', requireAuth, requireRole(['admin', 'professor']), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteSchedule(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Schedule not found' });
+      }
+
+      // Log activity
+      await storage.logActivity({
+        userId: req.session.userId,
+        action: 'delete_schedule',
+        entityType: 'schedule',
+        entityId: id,
+        details: { deletedAt: new Date().toISOString() },
+      });
+
+      res.json({ message: 'Schedule deleted successfully' });
+    } catch (error) {
+      console.error('Delete schedule error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Subject routes (needed for schedule creation)
+  app.get('/api/subjects', requireAuth, async (req, res) => {
+    try {
+      const subjects = await storage.getSubjects();
+      res.json(subjects);
+    } catch (error) {
+      console.error('Get subjects error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.post('/api/subjects', requireAuth, requireRole(['admin', 'professor']), async (req, res) => {
+    try {
+      const subjectData = insertSubjectSchema.parse(req.body);
+      const subject = await storage.createSubject(subjectData);
+
+      // Log activity
+      await storage.logActivity({
+        userId: req.session.userId,
+        action: 'create_subject',
+        entityType: 'subject',
+        entityId: subject.id,
+        details: { 
+          name: subjectData.name,
+          code: subjectData.code
+        },
+      });
+
+      res.status(201).json(subject);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid subject data', errors: error.errors });
+      }
+      console.error('Create subject error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   });

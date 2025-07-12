@@ -50,14 +50,14 @@ export function Navbar() {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.name} href={item.href}>
-                    <a className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors ${
+                    <span className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
                       isActive
                         ? 'text-slate-900 dark:text-slate-100'
                         : 'text-slate-500 dark:text-slate-400 hover:text-primary'
                     }`}>
                       <Icon className="h-4 w-4" />
                       <span>{item.name}</span>
-                    </a>
+                    </span>
                   </Link>
                 );
               })}
