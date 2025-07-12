@@ -4,6 +4,15 @@
 
 École Connect is a comprehensive educational management system built with a modern full-stack architecture. It provides private authentication, role-based access control, and complete academic tracking capabilities. The system supports four user roles: Admin, Professor, Student, and Parent, with hierarchical user creation and permission management.
 
+## Recent Changes
+
+**Database Migration (January 2025)**
+- Successfully migrated from in-memory storage to PostgreSQL database
+- Implemented Drizzle ORM with proper schema and relations
+- Added Neon serverless database connection for production scalability
+- All data operations now persist across server restarts
+- Database schema includes full relational integrity with foreign keys
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

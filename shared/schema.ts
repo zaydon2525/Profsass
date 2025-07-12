@@ -1,5 +1,6 @@
 import { pgTable, text, serial, integer, boolean, timestamp, uuid, decimal, jsonb, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Users table with role-based access
@@ -120,6 +121,71 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  createdGroups: many(groups),
+  studentGroups: many(studentGroups),
+  groupSubjects: many(groupSubjects),
+  uploadedMaterials: many(materials),
+  grades: many(grades),
+  gradedGrades: many(grades),
+  activityLogs: many(activityLogs),
+  notifications: many(notifications),
+  comments: many(materialComments),
+}));
+
+export const groupsRelations = relations(groups, ({ many, one }) => ({
+  creator: one(users, { fields: [groups.createdBy], references: [users.id] }),
+  studentGroups: many(studentGroups),
+  groupSubjects: many(groupSubjects),
+  materials: many(materials),
+  grades: many(grades),
+}));
+
+export const subjectsRelations = relations(subjects, ({ many }) => ({
+  groupSubjects: many(groupSubjects),
+  materials: many(materials),
+  grades: many(grades),
+}));
+
+export const groupSubjectsRelations = relations(groupSubjects, ({ one }) => ({
+  group: one(groups, { fields: [groupSubjects.groupId], references: [groups.id] }),
+  subject: one(subjects, { fields: [groupSubjects.subjectId], references: [subjects.id] }),
+  professor: one(users, { fields: [groupSubjects.professorId], references: [users.id] }),
+}));
+
+export const studentGroupsRelations = relations(studentGroups, ({ one }) => ({
+  student: one(users, { fields: [studentGroups.studentId], references: [users.id] }),
+  group: one(groups, { fields: [studentGroups.groupId], references: [groups.id] }),
+}));
+
+export const materialsRelations = relations(materials, ({ one, many }) => ({
+  group: one(groups, { fields: [materials.groupId], references: [groups.id] }),
+  subject: one(subjects, { fields: [materials.subjectId], references: [subjects.id] }),
+  uploader: one(users, { fields: [materials.uploadedBy], references: [users.id] }),
+  comments: many(materialComments),
+}));
+
+export const gradesRelations = relations(grades, ({ one }) => ({
+  student: one(users, { fields: [grades.studentId], references: [users.id] }),
+  subject: one(subjects, { fields: [grades.subjectId], references: [subjects.id] }),
+  group: one(groups, { fields: [grades.groupId], references: [groups.id] }),
+  grader: one(users, { fields: [grades.gradedBy], references: [users.id] }),
+}));
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  user: one(users, { fields: [activityLogs.userId], references: [users.id] }),
+}));
+
+export const materialCommentsRelations = relations(materialComments, ({ one }) => ({
+  material: one(materials, { fields: [materialComments.materialId], references: [materials.id] }),
+  user: one(users, { fields: [materialComments.userId], references: [users.id] }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
 
 // Schema definitions
 export const insertUserSchema = createInsertSchema(users).omit({

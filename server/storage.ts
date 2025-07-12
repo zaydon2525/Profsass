@@ -5,6 +5,8 @@ import {
   type Grade, type InsertGrade, type ActivityLog, type InsertActivityLog,
   type Notification, type InsertNotification
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface IStorage {
@@ -304,4 +306,175 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getGroups(): Promise<Group[]> {
+    return await db.select().from(groups).orderBy(desc(groups.createdAt));
+  }
+
+  async getGroup(id: string): Promise<Group | undefined> {
+    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    return group || undefined;
+  }
+
+  async createGroup(insertGroup: InsertGroup): Promise<Group> {
+    const [group] = await db.insert(groups).values(insertGroup).returning();
+    return group;
+  }
+
+  async updateGroup(id: string, updates: Partial<Group>): Promise<Group | undefined> {
+    const [group] = await db
+      .update(groups)
+      .set(updates)
+      .where(eq(groups.id, id))
+      .returning();
+    return group || undefined;
+  }
+
+  async deleteGroup(id: string): Promise<boolean> {
+    const result = await db.delete(groups).where(eq(groups.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getSubjects(): Promise<Subject[]> {
+    return await db.select().from(subjects).orderBy(desc(subjects.createdAt));
+  }
+
+  async getSubject(id: string): Promise<Subject | undefined> {
+    const [subject] = await db.select().from(subjects).where(eq(subjects.id, id));
+    return subject || undefined;
+  }
+
+  async createSubject(insertSubject: InsertSubject): Promise<Subject> {
+    const [subject] = await db.insert(subjects).values(insertSubject).returning();
+    return subject;
+  }
+
+  async getMaterials(): Promise<Material[]> {
+    return await db.select().from(materials).orderBy(desc(materials.createdAt));
+  }
+
+  async getMaterial(id: string): Promise<Material | undefined> {
+    const [material] = await db.select().from(materials).where(eq(materials.id, id));
+    return material || undefined;
+  }
+
+  async createMaterial(insertMaterial: InsertMaterial): Promise<Material> {
+    const [material] = await db.insert(materials).values(insertMaterial).returning();
+    return material;
+  }
+
+  async updateMaterial(id: string, updates: Partial<Material>): Promise<Material | undefined> {
+    const [material] = await db
+      .update(materials)
+      .set(updates)
+      .where(eq(materials.id, id))
+      .returning();
+    return material || undefined;
+  }
+
+  async deleteMaterial(id: string): Promise<boolean> {
+    const result = await db.delete(materials).where(eq(materials.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getGrades(): Promise<Grade[]> {
+    return await db.select().from(grades).orderBy(desc(grades.createdAt));
+  }
+
+  async getGrade(id: string): Promise<Grade | undefined> {
+    const [grade] = await db.select().from(grades).where(eq(grades.id, id));
+    return grade || undefined;
+  }
+
+  async createGrade(insertGrade: InsertGrade): Promise<Grade> {
+    const [grade] = await db.insert(grades).values(insertGrade).returning();
+    return grade;
+  }
+
+  async updateGrade(id: string, updates: Partial<Grade>): Promise<Grade | undefined> {
+    const [grade] = await db
+      .update(grades)
+      .set(updates)
+      .where(eq(grades.id, id))
+      .returning();
+    return grade || undefined;
+  }
+
+  async deleteGrade(id: string): Promise<boolean> {
+    const result = await db.delete(grades).where(eq(grades.id, id));
+    return result.rowCount > 0;
+  }
+
+  async logActivity(insertActivity: InsertActivityLog): Promise<ActivityLog> {
+    const [activity] = await db.insert(activityLogs).values(insertActivity).returning();
+    return activity;
+  }
+
+  async getActivities(): Promise<ActivityLog[]> {
+    return await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt));
+  }
+
+  async getUserActivities(userId: string): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, userId))
+      .orderBy(desc(activityLogs.createdAt));
+  }
+
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const [notification] = await db.insert(notifications).values(insertNotification).returning();
+    return notification;
+  }
+
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async markNotificationAsRead(id: string): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+    return result.rowCount > 0;
+  }
+}
+
+export const storage = new DatabaseStorage();
