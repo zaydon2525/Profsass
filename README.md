@@ -78,3 +78,4 @@ Une application complète de gestion éducative avec authentification privée, g
 git clone <repository-url>
 cd ecole-connect
 npm install
+# Profsass
